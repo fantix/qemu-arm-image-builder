@@ -1,7 +1,7 @@
 #!/bin/sh
 
 SUITE=buster # buster or bullseye or sid
-ARCH=arm64 # ppc64el or ppc64 or powerpc or arm64 or armhf or armel or amd64 or i386
+ARCH=amd64 # ppc64el or ppc64 or powerpc or arm64 or armhf or armel or amd64 or i386
 IMGFILE=debian-${SUITE}-${ARCH}.img
 GIGABYTES=40 # total size in GB
 SWAPGB=0 # swap size in GB
