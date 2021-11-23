@@ -1,0 +1,19 @@
+name: Build image for amd64
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - run: sudo ./build-amd64-debian-qemu-image.sh
+      - uses: actions/upload-artifact@v2
+        with:
+          name: amd64-image
+          path: debian-buster-amd64.img
+          retention-days: 1
