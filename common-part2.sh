@@ -1,7 +1,3 @@
-cat >>${MOUNTPT}/root/.profile <<EOF
-echo "$NETCONFIG"
-EOF
-
 cp /etc/resolv.conf /etc/environment ${MOUNTPT}/etc
 cat >${MOUNTPT}/etc/resolv.conf <<EOF
 options edns0 rotate

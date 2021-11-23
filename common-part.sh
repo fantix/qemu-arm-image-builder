@@ -103,10 +103,10 @@ deb http://deb.debian.org/debian-ports unreleased main
 EOF
 fi
 
-chroot ${MOUNTPT} dpkg-reconfigure locales
-chroot ${MOUNTPT} dpkg-reconfigure tzdata
-chroot ${MOUNTPT} dpkg-reconfigure keyboard-configuration
-chroot ${MOUNTPT} passwd root
+# chroot ${MOUNTPT} dpkg-reconfigure locales
+# chroot ${MOUNTPT} dpkg-reconfigure tzdata
+# chroot ${MOUNTPT} dpkg-reconfigure keyboard-configuration
+# chroot ${MOUNTPT} passwd root
 #chroot ${MOUNTPT} pam-auth-update
 set +x
 
@@ -149,7 +149,6 @@ fi
 
 if [ $NETWORK != none ]; then 
   echo "IPv4 DHCP is assumed."
-  NETIF=enp0s1
 
   if [ $NETWORK = ifupdown ]; then
     NETCONFIG="Network configurations can be changed by /etc/network/interfaces"
@@ -197,3 +196,15 @@ po::powerokwait:/sbin/shutdown -c "Power supply recovered."
 EOF
   mv ${MOUNTPT}/etc/inittab.new ${MOUNTPT}/etc/inittab
 fi
+
+chroot ${MOUNTPT} apt-get clean
+rm -f ${MOUNTPT}/var/lib/apt/lists/deb*
+
+echo 'NAutoVTs=0' >> ${MOUNTPT}/etc/systemd/logind.conf
+mkdir "${MOUNTPT}/etc/systemd/system/getty@ttyS0.service.d/"
+cat > "${MOUNTPT}/etc/systemd/system/getty@ttyS0.service.d/override.conf" <<EOF
+[Service]
+ExecStart=
+ExecStart=-/sbin/agetty --autologin root --noclear %I 38400 linux
+EOF
+chroot ${MOUNTPT} systemctl enable getty@ttyS0.service

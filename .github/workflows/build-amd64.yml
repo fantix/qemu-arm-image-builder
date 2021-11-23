@@ -10,10 +10,39 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - id: cache
+        uses: actions/cache@v2
+        with:
+          path: output
+          key: v1
       - uses: actions/checkout@v2
+        if: steps.cache.outputs.cache-hit != 'true'
       - run: sudo ./build-amd64-debian-qemu-image.sh
+        if: steps.cache.outputs.cache-hit != 'true'
+      - run: ls -lh output/
       - uses: actions/upload-artifact@v2
+        if: steps.cache.outputs.cache-hit != 'true'
         with:
           name: amd64-image
-          path: debian-buster-amd64.img
+          path: output
           retention-days: 1
+
+  test:
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - uses: actions/cache@v2
+        with:
+          path: output
+          key: v1
+      - run: ls -lh output/
+      - run: sudo apt-get -q -y --no-install-recommends install qemu-system-x86
+      - run: |
+          qemu-system-x86_64 -accel kvm -m 4G \
+            -initrd output/initrd.img -kernel output/vmlinuz \
+            -append 'root=/dev/sda1 quiet' \
+            -device e1000,netdev=net0 -netdev user,id=net0 \
+            -snapshot \
+            -nographic \
+            output/debian.qcow2
