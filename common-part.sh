@@ -200,11 +200,19 @@ fi
 chroot ${MOUNTPT} apt-get clean
 rm -f ${MOUNTPT}/var/lib/apt/lists/deb*
 
+
+cat >>${MOUNTPT}/boot/entrypoint.sh <<EOF
+#!/bin/sh
+echo "Hello, world!"
+mount /dev/sdb1 /mnt
+sh /mnt/entrypoint.sh
+init 0
+EOF
 echo 'NAutoVTs=0' >> ${MOUNTPT}/etc/systemd/logind.conf
 mkdir "${MOUNTPT}/etc/systemd/system/getty@ttyS0.service.d/"
 cat > "${MOUNTPT}/etc/systemd/system/getty@ttyS0.service.d/override.conf" <<EOF
 [Service]
 ExecStart=
-ExecStart=-/sbin/agetty --autologin root --noclear %I 38400 linux
+ExecStart=-/sbin/agetty --autologin root -l /boot/entrypoint.sh --noclear %I 38400 linux
 EOF
 chroot ${MOUNTPT} systemctl enable getty@ttyS0.service

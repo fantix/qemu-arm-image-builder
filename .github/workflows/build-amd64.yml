@@ -14,7 +14,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: output
-          key: v1
+          key: v2
       - uses: actions/checkout@v2
         if: steps.cache.outputs.cache-hit != 'true'
       - run: sudo ./build-amd64-debian-qemu-image.sh
@@ -28,21 +28,26 @@ jobs:
           retention-days: 1
 
   test:
-    runs-on: ubuntu-latest
+    runs-on: macos-latest
     needs: build
 
     steps:
+      - uses: actions/checkout@v2
       - uses: actions/cache@v2
         with:
           path: output
-          key: v1
+          key: v2
       - run: ls -lh output/
-      - run: sudo apt-get -q -y --no-install-recommends install qemu-system-x86
+#      - run: sudo apt-get -q -y --no-install-recommends install qemu-system-x86
+      - run: brew install qemu
       - run: |
-          qemu-system-x86_64 -accel kvm -m 4G \
+          qemu-system-x86_64 -accel hvf -m 4G \
             -initrd output/initrd.img -kernel output/vmlinuz \
-            -append 'root=/dev/sda1 quiet' \
+            -append 'root=/dev/sda1 quiet console=ttyS0' \
             -device e1000,netdev=net0 -netdev user,id=net0 \
+            -device virtio-scsi-pci,id=scsi \
+            -drive file=output/debian.qcow2,id=rootimg,cache=unsafe,if=none \
+            -device scsi-hd,drive=rootimg \
+            -drive file=fat:rw:./drive/,format=raw \
             -snapshot \
             -nographic \
-            output/debian.qcow2
